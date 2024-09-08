@@ -31,6 +31,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
 
 public class Terminal extends TextScreen implements CommandExecutionCompletedListener {
 
@@ -107,11 +109,39 @@ public class Terminal extends TextScreen implements CommandExecutionCompletedLis
         goToX(1);
         printPS1();
     }
+    
+    private String getClipboardContent() {
+        String clipboardContent = null;
+        try {
+            clipboardContent = ((String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor)).trim();
+        } catch (Exception e) {
+            System.out.println(String.format("getClipboardContent (%s) throws:", clipboardContent));
+            e.printStackTrace();
+        }
+        return clipboardContent;
+    }
 
     @Override
     void keyTyped(KeyEvent e) {
         if (e.getModifiers() == KeyEvent.CTRL_MASK) {
-            return;
+            System.out.println("ctrl pressed");
+            System.out.println(((int)e.getKeyChar()));
+            switch (e.getKeyChar()) {
+                case 22: // V
+                    String clipboardContent = getClipboardContent();
+                    if (clipboardContent != null) {
+                        for (int i = 0; i < clipboardContent.length(); i++) {
+                            char c = clipboardContent.charAt(i);
+                            if (c == '\n') {
+                            } else {
+                                drawChar(c);
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    return;
+            }
         }
 
         switch (e.getKeyChar()) {
